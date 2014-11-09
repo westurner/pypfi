@@ -281,7 +281,7 @@ def main(*args):
     if opts.output_file:
         with codecs.open(opts.output_file, 'w', encoding='utf-8') as f:
             for row in DataGenerator(output=f, **kwargs).generate():
-                print(row)
+                print(row, file=f)
     else:
         for row in DataGenerator(output=sys.stdout, **kwargs).generate():
             print(row)
