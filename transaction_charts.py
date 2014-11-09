@@ -2,11 +2,13 @@
 from __future__ import print_function
 import calendar
 import cgi
+import codecs
 import collections
 import sys
 import StringIO
 import numpy as np
 import pandas as pd
+
 
 def configure_pandas_print_options():
     pd.set_option('display.max_rows', 500)
@@ -14,71 +16,6 @@ def configure_pandas_print_options():
     pd.set_option('display.width', 1000)
 
 configure_pandas_print_options()
-
-DAY_ABBRS = dict(enumerate(calendar.day_abbr))
-
-def get_weekday_name(n):
-    return "%d-%s" % (n, DAY_ABBRS.get(n))
-
-HTML_HEADER="""
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/stylesheets/jquery.tocify.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/floatthead/1.2.8/jquery.floatThead.min.js"></script>
-
-<script>
-$(document).ready(function() {
-    $("table.table").floatThead();
-    $('h2,h3,h4,h5,h6').css('display', 'inline-table').after('<a class="headerlink" href="#">^</a>');
-    $("#toc").tocify({
-        selectors: "h2,h3,h4,h5,h6",
-        showAndHide: false,
-        hashGenerator: "pretty",
-        scrollHistory: true,
-        extendPage: false
-        });
-});
-</script>
-
-<style>
-.table-condensed>thead>tr>th,
-.table-condensed>tbody>tr>th,
-.table-condensed>tfoot>tr>th,
-.table-condensed>thead>tr>td,
-.table-condensed>tbody>tr>td,
-.table-condensed>tfoot>tr>td {
-    padding: 2px !important;
-}
-
-table.floatThead-table {
-    border-top: none;
-    border-bottom: none;
-    background-color: #FFF;
-}
-
-.tocify {
-   position: static;
-   margin-left: 0;
-}
-
-.tocify-subheader {
-    text-indent: 20px;
-    display: inherit !important;
-}
-
-a.headerlink {
-    color: #F2F2F2;
-    padding: 0 4px 0 4px;
-    text-decoration: none;
-}
-
-</style>
-"""
 
 
 class ReportDict(object):
@@ -146,17 +83,42 @@ def read_transactions_tsv(path):
     return df
 
 
-def add_computed_columns(df):
-    df['year'] = df['date'].apply(lambda x: x.year)
-    df['yearmonth'] = df['date'].apply(lambda x: "%d-%02d" % (x.year, x.month))
-    df['month'] = df['date'].apply(lambda x: x.month)
-    df['weekday'] = df['date'].apply(lambda x: x.weekday())
+DAY_ABBRS = dict(enumerate(calendar.day_abbr))
+
+
+def get_weekday_name(n):
+    """
+    Args:
+        n (int): integer weekday name (pandas)
+    Returns:
+        str: naturally-sortable string: ``0-Mon``, ``6-Sun``
+    """
+    return "%d-%s" % (n, DAY_ABBRS.get(n))
+
+
+def add_computed_columns(df, colname='date'):
+    """
+    Add computed columns to a dataframe for date-based calculations
+
+    Args:
+        df (pandas.DataFrame): DataFrame to augment
+    Returns:
+        df (pandas.DataFrame): dataframe with columns added
+
+    .. note:: This method modifies the ``df`` argument
+       (does not do ``df.copy()`` before adding computed columns)
+
+    """
+    df['year'] = df[colname].apply(lambda x: x.year)
+    df['yearmonth'] = df[colname].apply(lambda x: "%d-%02d" % (x.year, x.month))
+    df['month'] = df[colname].apply(lambda x: x.month)
+    df['weekday'] = df[colname].apply(lambda x: x.weekday())
     df['weekday_abbr'] = df['weekday'].apply(get_weekday_name)
-    df['hour'] = df['date'].apply(lambda x: x.hour)
+    df['hour'] = df[colname].apply(lambda x: x.hour)
     return df
 
 
-def with_groupby(df, _output=sys.stdout):
+def build_groupby_reports(df, _output=sys.stdout):
     output = ReportDict()
 
     df = add_computed_columns(df)
@@ -180,7 +142,7 @@ def with_groupby(df, _output=sys.stdout):
     return output
 
 
-def with_pivot(df, _output=sys.stdout):
+def build_pivot_reports(df, _output=sys.stdout):
     output = ReportDict()
 
     df = add_computed_columns(df)
@@ -255,29 +217,71 @@ def with_pivot(df, _output=sys.stdout):
     return output
 
 
-def main():
-    input_file = './transactions.tsv'
-    output_file = './test.html'
-    debug = True
+HTML_HEADER="""
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/stylesheets/jquery.tocify.css">
 
-    output = sys.stdout
-    output = StringIO.StringIO()
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/floatthead/1.2.8/jquery.floatThead.min.js"></script>
 
-    df = read_transactions_tsv(input_file)
-    print(df, file=output)
-    print(df.dtypes, file=output)
+<script>
+$(document).ready(function() {
+    $("table.table").floatThead();
+    $('h2,h3,h4,h5,h6').css('display', 'inline-table').after('<a class="headerlink" href="#">^</a>');
+    $("#toc").tocify({
+        selectors: "h2,h3,h4,h5,h6",
+        showAndHide: false,
+        hashGenerator: "pretty",
+        scrollHistory: true,
+        extendPage: false
+        });
+});
+</script>
+
+<style>
+.table-condensed>thead>tr>th,
+.table-condensed>tbody>tr>th,
+.table-condensed>tfoot>tr>th,
+.table-condensed>thead>tr>td,
+.table-condensed>tbody>tr>td,
+.table-condensed>tfoot>tr>td {
+    padding: 2px !important;
+}
+
+table.floatThead-table {
+    border-top: none;
+    border-bottom: none;
+    background-color: #FFF;
+}
+
+.tocify {
+   position: static;
+   margin-left: 0;
+
+   width: inherit;
+   max-height: inherit;
+}
+
+.tocify-subheader {
+    text-indent: 20px;
+    display: inherit !important;
+}
+
+a.headerlink {
+    color: #F2F2F2;
+    padding: 0 4px 0 4px;
+    text-decoration: none;
+}
+
+</style>
+"""
 
 
-    output_data = ReportDict(headingchar='=', headinghtml='h2')
-    output_data['df'] = df.copy()
-
-    output_data['with_groupby'] = with_groupby(df, _output=output)
-    output_data['with_pivot'] = with_pivot(df, _output=output)
-
-    if debug:
-        output_data.print_str()
-
-    import codecs
+def write_html_report(input_file, output_file, report_dict):
     with codecs.open(output_file, 'w', encoding='utf8') as f:
         f.write('<html><head>')
         f.write('<title>{0}</title>'.format(cgi.escape(input_file)))
@@ -293,7 +297,7 @@ def main():
         f.write('<div id="toc"></div>')
 
         f.write('<div class="body">')
-        output_data.print_html(output=f)
+        report_dict.print_html(output=f)
         f.write('</div>')
 
         f.write('</div>')
@@ -303,6 +307,31 @@ def main():
         f.write('<a class="headerlink" href="#">^top^</a>')
         f.write('</div></div></div>')
         f.write('</body></html>')
+
+
+def main():
+    input_file = './transactions.tsv'
+    output_file = './test.html'
+    debug = True
+
+    output = sys.stdout
+    output = StringIO.StringIO()
+
+    df = read_transactions_tsv(input_file)
+    if debug:
+        print(df, file=output)
+        print(df.dtypes, file=output)
+
+    report_dict = ReportDict(headingchar='=', headinghtml='h2')
+    report_dict['df'] = df.copy()
+
+    report_dict['build_groupby_reports'] = build_groupby_reports(df, _output=output)
+    report_dict['build_pivot_reports'] = build_pivot_reports(df, _output=output)
+
+    if debug:
+        report_dict.print_str(output=output)
+
+    write_html_report(input_file, output_file, report_dict)
 
     return 0
 
