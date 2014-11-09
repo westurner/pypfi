@@ -35,7 +35,22 @@ lint:
 	flake8 pypfi tests
 
 test:
-	python setup.py test
+	#python setup.py test
+	mkdir -p _build/html
+	python ./pypfi/pypfi.py -i ./tests/transactions.tsv -o _build/html/index.html
+
+UNAME:=$(shell uname)
+
+ifeq ($(UNAME), Darwin)
+BROWSER="open"
+SEDOPTS=-i '' -e
+else
+BROWSER="x-www-browser"
+SEDOPTS=-i
+endif
+
+open:
+	$(BROWSER) _build/html/index.html
 
 test-all:
 	tox

@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from __future__ import print_function
+"""
+pypfi
+"""
 import calendar
 import cgi
 import codecs
@@ -309,13 +313,7 @@ def write_html_report(input_file, output_file, report_dict):
         f.write('</body></html>')
 
 
-def main():
-    input_file = './transactions.tsv'
-    output_file = './test.html'
-    debug = True
-
-    output = sys.stdout
-    output = StringIO.StringIO()
+def pypfi(input_file, output_file, debug=False, output=sys.stdout):
 
     df = read_transactions_tsv(input_file)
     if debug:
@@ -334,6 +332,63 @@ def main():
     write_html_report(input_file, output_file, report_dict)
 
     return 0
+
+
+
+import unittest
+class Test_pypfi(unittest.TestCase):
+    def test_pypfi(self):
+        pass
+
+
+def main(*args):
+    import logging
+    import optparse
+    import sys
+
+    prs = optparse.OptionParser(
+        usage="%prog -i <input.tsv> -o <report.html>")
+
+    prs.add_option('-i', '--input-file',
+                   dest='input_file',)
+    prs.add_option('-o', '--output-file',
+                   dest='output_file',)
+
+    prs.add_option('-v', '--verbose',
+                    dest='verbose',
+                    action='store_true',)
+    prs.add_option('-q', '--quiet',
+                    dest='quiet',
+                    action='store_true',)
+    prs.add_option('-t', '--test',
+                    dest='run_tests',
+                    action='store_true',)
+
+    args = args and list(args) or sys.argv[1:]
+    (opts, args) = prs.parse_args(args)
+
+    if not opts.quiet:
+        logging.basicConfig()
+
+        if opts.verbose:
+            logging.getLogger().setLevel(logging.DEBUG)
+
+    if opts.run_tests:
+        sys.argv = [sys.argv[0]] + args
+        import unittest
+        exit(unittest.main())
+
+    if opts.verbose:
+        debug = True
+        output = sys.stdout
+    else:
+        debug = False
+        output = StringIO.StringIO()
+
+    return pypfi(opts.input_file,
+                 opts.output_file,
+                 debug=debug,
+                 output=output)
 
 
 if __name__ == "__main__":
