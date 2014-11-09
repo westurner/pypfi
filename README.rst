@@ -12,3 +12,11 @@ Features
 --------
 
 * TODO
+
+
+Resources
+----------
+| United States Department of Labor
+| Bureau of Labor Statistics
+| Occupational Outlook Handbook
+| http://www.bls.gov/ooh/
