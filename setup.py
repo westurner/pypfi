@@ -23,7 +23,7 @@ test_requirements = [
 setup(
     name='pypfi',
     version='0.1.0',
-    description='pypfi',
+    description='pypfi is a Python package for personal finance.',
     long_description=readme + '\n\n' + history,
     author='Wes Turner',
     author_email='wes.turner@gmail.com',
