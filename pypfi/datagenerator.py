@@ -2,7 +2,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 """
-datagenerator
+pyfi.datagenerator
+===================
+
+Installation::
+
+    pip install arrow factory-boy
+
+Usage::
+
+    python datagenerator.py -t
+    python datagenerator.py -c 20
+
+Documentation:
+
+* https://arrow.readthedocs.org/en/latest/
+* https://factoryboy.readthedocs.org/en/latest/
+* http://docs.scipy.org/doc/
+
+
 """
 import datetime
 import sys
@@ -11,7 +29,7 @@ import unittest
 import arrow
 import factory.fuzzy as fuzzy
 import numpy as np
-import pandas as pd
+#import pandas as pd
 
 
 class DateTimeGenerator(object):
