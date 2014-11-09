@@ -3,7 +3,7 @@ pypfi
 ===============================
 
 
-pypfi
+pypfi is a Python package for personal finance.
 
 * Free software: BSD license
 .. * Documentation: https://pypfi.readthedocs.org.
