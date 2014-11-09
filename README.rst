@@ -16,6 +16,10 @@ Features
 
 Resources
 ----------
+| https://en.wikipedia.org/wiki/Personal_finance
+
+| https://reddit.com/r/personalfinance
+
 | United States Department of Labor
 | Bureau of Labor Statistics
 | Occupational Outlook Handbook
