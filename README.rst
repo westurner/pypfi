@@ -18,6 +18,8 @@ Resources
 ----------
 | https://en.wikipedia.org/wiki/Personal_finance
 
+| https://en.wikipedia.org/wiki/Personal_budget
+
 | https://reddit.com/r/personalfinance
 
 | United States Department of Labor
