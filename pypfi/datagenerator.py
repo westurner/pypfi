@@ -170,6 +170,11 @@ class DataGenerator(object):
 
 def datagenerator2do():
     """
+    Daily cycle:
+        - [ ] sleep/wake (weekday)
+        - [ ] sleep/wake (weekend)
+        - [ ] meals
+
     Recurring events:
         - [ ] paid on fridays
         - [ ] monthly bills
