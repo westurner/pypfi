@@ -79,7 +79,6 @@ class ReportDict(object):
 
 def read_transactions_tsv(path):
     df = pd.read_csv(path,
-                    sep='\t',
                     #index_col=0,
                     parse_dates=['date'],
                     names=['date', 'desc', 'amount', 'balance'],
@@ -337,8 +336,25 @@ def pypfi(input_file, output_file, debug=False, output=sys.stdout):
 
 import unittest
 class Test_pypfi(unittest.TestCase):
-    def test_pypfi(self):
-        pass
+    def setUp(self):
+        import os
+        self.INPUT_FILE = os.path.join(os.path.dirname(__file__),
+                                '..', 'tests', 'testdata.csv')
+        self.BUILDDIR = os.path.join(os.path.dirname(__file__),
+                                '..', 'build')
+        if not os.path.exists(self.BUILDDIR):
+            os.mkdir(self.BUILDDIR)
+        self.OUTPUT_FILE = os.path.join(self.BUILDDIR, 'testoutput.html')
+        if os.path.exists(self.OUTPUT_FILE):
+            os.remove(self.OUTPUT_FILE)
+
+    def test_read_transactions_tsv(self):
+        output = read_transactions_tsv(self.INPUT_FILE)
+        self.assertTrue(isinstance(output, pd.DataFrame))
+
+    def test_900_pypfi(self):
+        output = pypfi(self.INPUT_FILE, self.OUTPUT_FILE)
+
 
 
 def main(*args):
