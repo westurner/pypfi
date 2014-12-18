@@ -22,6 +22,7 @@ Documentation:
 
 
 """
+import codecs
 import datetime
 import sys
 import unittest
@@ -159,7 +160,7 @@ class DataGenerator(object):
 
             if self.max_count and self.count >= self.max_count:
                 break
-            if self.date_end and self.current_date < self.date_end:
+            if self.date_end and self.current_date >= self.date_end:
                 break
             if self.balance <= 0:
                 # overdraft
@@ -249,8 +250,18 @@ def main(*args):
     prs.add_option('-o', '--output-file',
                    dest='output_file')
 
+    prs.add_option('-b', '--balance',
+                   help='Initial balance',
+                   dest='initial_balance',
+                   type=float,
+                   default=10000)
+
     prs.add_option('-c', '--count',
                    dest='count',
+                   type=int,
+                   default=None)
+    prs.add_option('-d', '--days',
+                   dest='day_count',
                    type=int,
                    default=None)
 
@@ -279,17 +290,28 @@ def main(*args):
         import unittest
         exit(unittest.main())
 
+    import decimal
     kwargs = {
-        'max_count': opts.count
+        'max_count': opts.count,
+        'initial_balance': decimal.Decimal(opts.initial_balance)
     }
+    if opts.day_count:
+        date_start = arrow.now()
+        date_end = date_start + datetime.timedelta(opts.day_count)
+        #kwargs['date_start'] = date_start
+        kwargs['date_end'] = date_end
 
+
+    import csv
     if opts.output_file:
         with codecs.open(opts.output_file, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
             for row in DataGenerator(output=f, **kwargs).generate():
-                print(row, file=f)
+                writer.writerow(row)
     else:
+        writer = csv.writer(sys.stdout)
         for row in DataGenerator(output=sys.stdout, **kwargs).generate():
-            print(row)
+            writer.writerow(row)
 
     return 0
 
