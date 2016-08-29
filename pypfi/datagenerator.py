@@ -22,6 +22,7 @@ Documentation:
 
 
 """
+import codecs
 import datetime
 import sys
 import unittest
@@ -284,9 +285,11 @@ def main(*args):
     }
 
     if opts.output_file:
+        import csv
         with codecs.open(opts.output_file, 'w', encoding='utf-8') as f:
-            for row in DataGenerator(output=f, **kwargs).generate():
-                print(row, file=f)
+            writer = csv.writer(f, delimiter='\t',  quoting=csv.QUOTE_ALL)
+            rows = DataGenerator(output=f, **kwargs).generate()
+            writer.writerows(rows)
     else:
         for row in DataGenerator(output=sys.stdout, **kwargs).generate():
             print(row)
