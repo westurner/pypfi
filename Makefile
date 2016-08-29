@@ -41,6 +41,9 @@ test:
 
 UNAME:=$(shell uname)
 
+BROWSER=$(shell which web)
+
+ifeq ($(BROWSER), '')
 ifeq ($(UNAME), Darwin)
 BROWSER="open"
 SEDOPTS=-i '' -e
@@ -48,9 +51,11 @@ else
 BROWSER="x-www-browser"
 SEDOPTS=-i
 endif
+endif
+
 
 open:
-	$(BROWSER) _build/html/index.html
+	$(BROWSER) ./_build/html/index.html
 
 test-all:
 	tox
@@ -59,7 +64,7 @@ coverage:
 	coverage run --source pypfi setup.py test
 	coverage report -m
 	coverage html
-	open htmlcov/index.html
+	$(BROWSER) ./htmlcov/index.html
 
 docs:
 	rm -f docs/pypfi.rst
@@ -67,7 +72,7 @@ docs:
 	sphinx-apidoc -o docs/ pypfi
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	open docs/_build/html/index.html
+	$(BROWSER) ./docs/_build/html/index.html
 
 release: clean
 	python setup.py sdist upload
