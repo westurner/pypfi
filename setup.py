@@ -14,6 +14,8 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 install_requires = [
     # 'numpy',
     # 'pandas',
+    'arrow',
+    'factory_boy',
 ]
 
 test_requirements = [
